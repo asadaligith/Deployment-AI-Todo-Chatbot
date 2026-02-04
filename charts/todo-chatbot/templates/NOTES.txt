@@ -1,0 +1,43 @@
+===============================================================
+  Todo Chatbot has been deployed!
+===============================================================
+
+Application URLs:
+-----------------
+{{- if eq .Values.frontend.service.type "NodePort" }}
+Frontend (UI):
+  Get the application URL by running:
+
+  minikube service {{ .Values.frontend.name }}-svc -n {{ include "todo-chatbot.namespace" . }} --url
+
+  Or access directly at: http://<minikube-ip>:{{ .Values.frontend.service.nodePort }}
+{{- end }}
+
+Backend (API):
+  Internal service: http://{{ .Values.backend.name }}-svc:{{ .Values.backend.service.port }}
+  (Only accessible from within the cluster)
+
+Verify Deployment:
+------------------
+1. Check pod status:
+   kubectl get pods -n {{ include "todo-chatbot.namespace" . }}
+
+2. Check services:
+   kubectl get svc -n {{ include "todo-chatbot.namespace" . }}
+
+3. View logs:
+   kubectl logs -f deployment/{{ .Values.frontend.name }} -n {{ include "todo-chatbot.namespace" . }}
+   kubectl logs -f deployment/{{ .Values.backend.name }} -n {{ include "todo-chatbot.namespace" . }}
+
+Quick Commands:
+---------------
+# Get frontend URL
+minikube service {{ .Values.frontend.name }}-svc -n {{ include "todo-chatbot.namespace" . }} --url
+
+# Port forward (alternative access)
+kubectl port-forward svc/{{ .Values.frontend.name }}-svc {{ .Values.frontend.service.port }}:{{ .Values.frontend.service.port }} -n {{ include "todo-chatbot.namespace" . }}
+
+# Uninstall
+helm uninstall {{ .Release.Name }}
+
+Thank you for using Todo Chatbot!

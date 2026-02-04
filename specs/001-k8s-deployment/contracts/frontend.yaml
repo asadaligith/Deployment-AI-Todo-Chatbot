@@ -1,0 +1,89 @@
+# Frontend Service Contract
+# Defines the interface and requirements for the frontend container
+
+service:
+  name: frontend
+  type: web-ui
+  version: "1.0.0"
+
+container:
+  image: todo-frontend
+  tag: latest
+  runtime: node
+  port: 3000
+
+  # Build requirements
+  build:
+    dockerfile: frontend/Dockerfile
+    context: frontend/
+    stages:
+      - name: builder
+        base: node:20-alpine
+        purpose: Install dependencies and build
+      - name: runner
+        base: node:20-alpine
+        purpose: Serve production build
+
+  # Environment variables
+  environment:
+    required:
+      - name: BACKEND_URL
+        description: URL to backend service
+        example: http://backend-svc:8000
+        source: configmap
+    optional:
+      - name: NODE_ENV
+        description: Node environment mode
+        default: production
+        source: inline
+      - name: PORT
+        description: Server port
+        default: "3000"
+        source: inline
+
+  # Health endpoints (required for K8s probes)
+  health:
+    liveness:
+      path: /health
+      port: 3000
+      method: GET
+      expected_status: 200
+    readiness:
+      path: /ready
+      port: 3000
+      method: GET
+      expected_status: 200
+
+  # Resource requirements
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+
+# Kubernetes service exposure
+exposure:
+  type: NodePort
+  port: 80
+  targetPort: 3000
+  nodePort: 30080
+  protocol: TCP
+
+# Network dependencies
+dependencies:
+  - service: backend-svc
+    port: 8000
+    protocol: HTTP
+    required: true
+    description: Backend API for todo operations
+
+# Expected behavior
+behavior:
+  startup_time: 30s
+  shutdown_grace: 10s
+  scaling:
+    min_replicas: 1
+    max_replicas: 3
+    strategy: RollingUpdate

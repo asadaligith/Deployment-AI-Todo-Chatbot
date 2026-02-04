@@ -1,0 +1,121 @@
+# Default values for todo-chatbot Helm chart
+# This is a YAML-formatted file.
+
+# Namespace configuration
+namespace: todo-chatbot
+
+# Frontend configuration
+frontend:
+  name: frontend
+  image: todo-frontend
+  tag: latest
+  replicas: 1
+  port: 3000
+
+  # Service configuration
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 3000
+    nodePort: 30080
+
+  # Resource limits and requests
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+  # Environment variables
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+
+  # Health probes
+  livenessProbe:
+    path: /
+    port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readinessProbe:
+    path: /
+    port: 3000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Backend configuration
+backend:
+  name: backend
+  image: todo-backend
+  tag: latest
+  replicas: 1
+  port: 8000
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+  # Resource limits and requests
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 200m
+
+  # Environment variables
+  env:
+    PORT: "8000"
+    LOG_LEVEL: INFO
+    PYTHONUNBUFFERED: "1"
+
+  # ConfigMap values
+  config:
+    LOG_LEVEL: INFO
+    CORS_ORIGINS: http://frontend-svc
+
+  # Health probes
+  livenessProbe:
+    path: /health
+    port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readinessProbe:
+    path: /health
+    port: 8000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Image pull policy (Never for local images in Minikube)
+imagePullPolicy: Never
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  fullnameOverride: postgresql
+  image:
+    repository: postgres
+    tag: "15-alpine"
+  auth:
+    username: todouser
+    password: todopass
+    database: tododb
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+# Labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: todo-chatbot
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/managed-by: helm
+  env: local

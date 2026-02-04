@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.backend.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "todo-chatbot.backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "todo-chatbot.backend.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.backend.name }}
+          image: "{{ .Values.backend.image }}:{{ .Values.backend.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.backend.env.PORT | quote }}
+            - name: PYTHONUNBUFFERED
+              value: {{ .Values.backend.env.PYTHONUNBUFFERED | quote }}
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.backend.name }}-config
+                  key: LOG_LEVEL
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.backend.name }}-config
+                  key: CORS_ORIGINS
+            - name: FRONTEND_URL
+              value: "http://{{ .Values.frontend.name }}-svc:{{ .Values.frontend.service.port }}"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DATABASE_URL
+            {{- if .Values.backend.openaiApiKey }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: OPENAI_API_KEY
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.livenessProbe.path }}
+              port: {{ .Values.backend.livenessProbe.port }}
+            initialDelaySeconds: {{ .Values.backend.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.readinessProbe.path }}
+              port: {{ .Values.backend.readinessProbe.port }}
+            initialDelaySeconds: {{ .Values.backend.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.readinessProbe.periodSeconds }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}

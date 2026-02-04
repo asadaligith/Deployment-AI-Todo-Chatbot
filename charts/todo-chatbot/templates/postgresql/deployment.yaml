@@ -1,0 +1,65 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.postgresql.fullnameOverride }}
+  namespace: {{ include "todo-chatbot.namespace" . }}
+  labels:
+    {{- include "todo-chatbot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+    app: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          imagePullPolicy: {{ .Values.postgresql.imagePullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresql.auth.username | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgresql.auth.password | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.auth.database | quote }}
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            limits:
+              memory: {{ .Values.postgresql.resources.limits.memory | default "256Mi" }}
+              cpu: {{ .Values.postgresql.resources.limits.cpu | default "250m" }}
+            requests:
+              memory: {{ .Values.postgresql.resources.requests.memory | default "128Mi" }}
+              cpu: {{ .Values.postgresql.resources.requests.cpu | default "100m" }}
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.postgresql.auth.username }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.postgresql.auth.username }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: postgresql-data
+          emptyDir: {}
+{{- end }}
