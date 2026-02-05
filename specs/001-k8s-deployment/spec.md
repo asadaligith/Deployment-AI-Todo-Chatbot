@@ -2,12 +2,27 @@
 
 **Feature Branch**: `001-k8s-deployment`
 **Created**: 2026-02-01
-**Status**: Draft
+**Updated**: 2026-02-06
+**Status**: Complete
 **Input**: Phase IV Kubernetes deployment specification for completed Phase III Todo Chatbot
 
 ## Overview
 
 Deploy the existing Phase III Todo Chatbot application to a local Kubernetes cluster using Minikube, with containerized frontend and backend services managed via Helm charts. All deployment artifacts MUST be AI-generated following the Spec-Driven Development methodology.
+
+## Deliverables
+
+The following artifacts constitute the complete Phase IV deliverables:
+
+| Deliverable | Status | Location |
+| ----------- | ------ | -------- |
+| Dockerfile (Frontend) | ✅ Complete | `frontend/Dockerfile` |
+| Dockerfile (Backend) | ✅ Complete | `backend/Dockerfile` |
+| Kubernetes Deployment & Service (Helm) | ✅ Complete | `charts/todo-chatbot/` |
+| docker-compose.yml (Optional) | ✅ Complete | `docker-compose.yml` |
+| README with deployment instructions | ✅ Complete | `README.md` |
+
+**Source Project**: `E:\GIAIC\Hackathon_Q4\Hackahthhon_2_Phase_3\AI-Powered-Todo-Chatbot` (READ ONLY)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -72,6 +87,22 @@ As a hackathon participant, I want to demonstrate meaningful usage of AI DevOps 
 1. **Given** Docker AI Agent (Gordon) is available, **When** I use it to generate or analyze Dockerfiles, **Then** the output is captured in PHRs as evidence
 2. **Given** kubectl-ai is available, **When** I use it to generate or troubleshoot Kubernetes manifests, **Then** the interaction demonstrates AI-assisted debugging
 3. **Given** kagent is available, **When** I use it for Helm chart analysis or cluster insights, **Then** the output provides actionable recommendations
+
+---
+
+### User Story 5 - Access Clear Deployment Documentation (Priority: P5)
+
+As a developer or evaluator, I want a comprehensive README with step-by-step deployment instructions so that I can deploy the application without prior knowledge of the project.
+
+**Why this priority**: Documentation is essential for hackathon evaluation and reproducibility. Enables independent verification of deployment.
+
+**Independent Test**: Can be tested by following the README on a clean machine and successfully deploying the application.
+
+**Acceptance Scenarios**:
+
+1. **Given** the README exists, **When** I follow the docker build commands, **Then** both frontend and backend images are built successfully
+2. **Given** the README exists, **When** I follow the minikube and kubectl steps, **Then** the application deploys and is accessible
+3. **Given** docker-compose.yml exists (optional), **When** I run `docker-compose up`, **Then** the application runs locally without Kubernetes
 
 ---
 
@@ -306,6 +337,8 @@ If AI tools are unavailable:
 - **FR-008**: All deployment actions MUST be traceable to specifications and recorded in PHRs
 - **FR-009**: AI DevOps tools MUST be used meaningfully and documented (or fallback documented)
 - **FR-010**: System MUST be fully deployable on a local machine without cloud dependencies
+- **FR-011**: Project MUST include a README.md with complete deployment instructions including docker build/run commands and minikube start & kubectl apply steps
+- **FR-012**: Project SHOULD include a docker-compose.yml for local testing without Kubernetes (optional but recommended)
 
 ### Key Entities
 
@@ -347,6 +380,9 @@ If AI tools are unavailable:
 - **SC-006**: At least one AI DevOps tool (Gordon, kubectl-ai, or kagent) is demonstrably used with output captured in PHRs
 - **SC-007**: All Kubernetes resources are deployed to the dedicated `todo-chatbot` namespace
 - **SC-008**: 100% of deployment artifacts are traceable to this specification or derived plan/tasks
+- **SC-009**: README.md includes complete docker build/run commands that can be copy-pasted
+- **SC-010**: README.md includes complete minikube start and kubectl/helm apply steps that can be copy-pasted
+- **SC-011**: (Optional) docker-compose.yml allows application to run locally with a single `docker-compose up` command
 
 ## Dependencies
 
