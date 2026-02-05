@@ -1,0 +1,121 @@
+# Backend Service Contract
+# Defines the interface and requirements for the backend container
+
+service:
+  name: backend
+  type: api-server
+  version: "1.0.0"
+
+container:
+  image: todo-backend
+  tag: latest
+  runtime: python  # or node, depending on Phase III implementation
+  port: 8000
+
+  # Build requirements
+  build:
+    dockerfile: backend/Dockerfile
+    context: backend/
+    stages:
+      - name: builder
+        base: python:3.11-slim  # or node:20-alpine
+        purpose: Install dependencies
+      - name: runner
+        base: python:3.11-slim  # or node:20-alpine
+        purpose: Run application
+
+  # Environment variables
+  environment:
+    required: []
+    optional:
+      - name: PORT
+        description: Server port
+        default: "8000"
+        source: inline
+      - name: LOG_LEVEL
+        description: Logging verbosity
+        default: info
+        source: configmap
+        values: [debug, info, warning, error]
+      - name: CORS_ORIGINS
+        description: Allowed CORS origins
+        default: "*"
+        source: configmap
+
+  # Health endpoints (required for K8s probes)
+  health:
+    liveness:
+      path: /health
+      port: 8000
+      method: GET
+      expected_status: 200
+      response:
+        status: ok
+    readiness:
+      path: /ready
+      port: 8000
+      method: GET
+      expected_status: 200
+      response:
+        status: ready
+
+  # Resource requirements
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 200m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+# Kubernetes service exposure
+exposure:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  protocol: TCP
+
+# Network dependencies
+dependencies: []  # Backend has no upstream dependencies
+
+# API contract (for frontend communication)
+api:
+  protocol: HTTP/1.1
+  format: JSON
+  endpoints:
+    - path: /health
+      method: GET
+      description: Health check endpoint
+      response:
+        status: 200
+        body:
+          status: ok
+    - path: /ready
+      method: GET
+      description: Readiness check endpoint
+      response:
+        status: 200
+        body:
+          status: ready
+    # Todo API endpoints (existing from Phase III)
+    - path: /api/todos
+      method: GET
+      description: List all todos
+    - path: /api/todos
+      method: POST
+      description: Create a new todo
+    - path: /api/chat
+      method: POST
+      description: Chat with the bot
+
+# Expected behavior
+behavior:
+  startup_time: 30s
+  shutdown_grace: 10s
+  scaling:
+    min_replicas: 1
+    max_replicas: 3
+    strategy: RollingUpdate
+  concurrency:
+    max_connections: 100
+    timeout: 30s
