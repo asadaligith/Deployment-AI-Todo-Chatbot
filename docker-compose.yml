@@ -49,6 +49,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://todouser:todopass@postgres:5432/tododb
       - FRONTEND_URL=http://localhost:3000
       - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
