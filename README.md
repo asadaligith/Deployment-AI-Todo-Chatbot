@@ -1,6 +1,6 @@
 # AI-Powered Todo Chatbot - Kubernetes Deployment (Phase IV)
 
-This repository contains the deployment artifacts for the AI-Powered Todo Chatbot application. It deploys the Phase III application to a local Kubernetes cluster using Minikube.
+This repository contains the complete deployment artifacts and source code for the AI-Powered Todo Chatbot application. It deploys the application to a local Kubernetes cluster using Minikube.
 
 ## Project Overview
 
@@ -8,13 +8,11 @@ This repository contains the deployment artifacts for the AI-Powered Todo Chatbo
 - Dockerfiles for frontend (Next.js) and backend (FastAPI)
 - Kubernetes deployment via Helm charts
 - docker-compose.yml for local development
-- This README with deployment instructions
-
-**Source Application:** Phase III Todo Chatbot (separate repository)
+- Complete source code (frontend + backend)
 
 ## Prerequisites
 
-Ensure the following tools are installed:
+Ensure the following tools are installed before proceeding:
 
 | Tool | Version | Installation |
 |------|---------|-------------|
@@ -23,149 +21,275 @@ Ensure the following tools are installed:
 | Helm | 3.x | [helm.sh](https://helm.sh/docs/intro/install/) |
 | kubectl | 1.27+ | [kubernetes.io](https://kubernetes.io/docs/tasks/tools/) |
 
-## Quick Start
+---
 
-### Option 1: Docker Compose (Local Development)
+## Running Commands (Step by Step)
 
-The fastest way to run the application locally without Kubernetes:
+### Option 1: Docker Compose (Local Development - Quickest)
+
+**Step 1:** Open terminal and navigate to the project directory
 
 ```bash
-# Navigate to Phase 3 project directory
-cd E:\GIAIC\Hackathon_Q4\Hackahthhon_2_Phase_3\AI-Powered-Todo-Chatbot
-
-# Copy Dockerfiles from Phase 4
-cp E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4\frontend\Dockerfile ./frontend/
-cp E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4\backend\Dockerfile ./backend/
-cp E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4\docker-compose.yml ./
-
-# Start all services
-docker-compose up --build
-
-# Access the application
-# Frontend: http://localhost:3000
-# Backend:  http://localhost:8000
-# Health:   http://localhost:8000/health
+cd E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4
 ```
 
-### Option 2: Kubernetes with Minikube
+**Step 2:** Start all services (frontend + backend + PostgreSQL)
 
-Deploy to a local Kubernetes cluster:
+```bash
+docker-compose up --build
+```
+
+**Step 3:** Access the application
+
+```
+Frontend:     http://localhost:3000
+Backend API:  http://localhost:8000
+Health Check: http://localhost:8000/health
+```
+
+**Step 4:** Stop services (press `Ctrl+C` first, then run)
+
+```bash
+docker-compose down
+```
+
+**Step 5:** Stop and remove all data (volumes)
+
+```bash
+docker-compose down -v
+```
+
+---
+
+### Option 2: Kubernetes with Minikube (Full Deployment)
 
 #### Step 1: Start Minikube
 
 ```bash
-# Start Minikube with Docker driver
 minikube start --driver=docker
+```
 
-# Verify Minikube is running
+Verify Minikube is running:
+
+```bash
 minikube status
+```
+
+Expected output:
+```
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
 ```
 
 #### Step 2: Configure Docker Environment
 
-Point your shell to Minikube's Docker daemon:
+Point your shell to Minikube's Docker daemon so images are built inside the cluster:
 
-```bash
-# macOS/Linux
-eval $(minikube docker-env)
-
-# Windows PowerShell
+**Windows PowerShell:**
+```powershell
 minikube docker-env | Invoke-Expression
+```
 
-# Windows Command Prompt
+**Windows Command Prompt:**
+```cmd
 @FOR /f "tokens=*" %i IN ('minikube docker-env') DO @%i
+```
+
+**macOS/Linux:**
+```bash
+eval $(minikube docker-env)
 ```
 
 #### Step 3: Build Docker Images
 
-Navigate to the Phase 3 project and build images:
+Navigate to the project directory and build both images:
 
 ```bash
-# Navigate to Phase 3 project
-cd E:\GIAIC\Hackathon_Q4\Hackahthhon_2_Phase_3\AI-Powered-Todo-Chatbot
+cd E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4
+```
 
-# Copy Dockerfiles from Phase 4
-cp E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4\frontend\Dockerfile ./frontend/
-cp E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4\backend\Dockerfile ./backend/
+Build the frontend image:
 
-# Build frontend image
+```bash
 docker build -t todo-frontend:latest ./frontend
+```
 
-# Build backend image
+Build the backend image:
+
+```bash
 docker build -t todo-backend:latest ./backend
+```
 
-# Verify images are built
+Verify images are built:
+
+```bash
 docker images | grep todo
+```
+
+Expected output:
+```
+todo-frontend   latest   <image-id>   <time>   <size>
+todo-backend    latest   <image-id>   <time>   <size>
 ```
 
 #### Step 4: Deploy with Helm
 
 ```bash
-# Navigate to Phase 4 project
-cd E:\GIAIC\Hackathon_Q4\Hackathon_2_Phase_4\phase4
-
-# Install the Helm chart
 helm install todo-chatbot ./charts/todo-chatbot
+```
 
-# Verify the release
+Verify the Helm release:
+
+```bash
 helm list
 ```
 
-#### Step 5: Access the Application
+#### Step 5: Verify Deployment
+
+Check all pods are running:
 
 ```bash
-# Get the frontend service URL
-minikube service frontend-svc -n todo-chatbot --url
+kubectl get pods -n todo-chatbot
+```
 
-# Or open directly in browser
+Expected output:
+```
+NAME                        READY   STATUS    RESTARTS   AGE
+frontend-xxx                1/1     Running   0          1m
+backend-xxx                 1/1     Running   0          1m
+postgresql-xxx              1/1     Running   0          1m
+```
+
+Check services:
+
+```bash
+kubectl get svc -n todo-chatbot
+```
+
+Expected output:
+```
+NAME           TYPE        CLUSTER-IP       PORT(S)        AGE
+frontend-svc   NodePort    10.x.x.x         80:30080/TCP   1m
+backend-svc    ClusterIP   10.x.x.x         8000/TCP       1m
+postgresql     ClusterIP   10.x.x.x         5432/TCP       1m
+```
+
+#### Step 6: Access the Application
+
+Get the frontend URL:
+
+```bash
+minikube service frontend-svc -n todo-chatbot --url
+```
+
+Or open directly in your browser:
+
+```bash
 minikube service frontend-svc -n todo-chatbot
 ```
 
-## Verification Commands
-
-Check that the deployment is successful:
+Or use port forwarding:
 
 ```bash
-# Check pods are running
-kubectl get pods -n todo-chatbot
-
-# Expected output:
-# NAME                        READY   STATUS    RESTARTS   AGE
-# frontend-xxx                1/1     Running   0          1m
-# backend-xxx                 1/1     Running   0          1m
-# postgresql-xxx              1/1     Running   0          1m
-
-# Check services
-kubectl get svc -n todo-chatbot
-
-# Expected output:
-# NAME           TYPE        CLUSTER-IP       PORT(S)        AGE
-# frontend-svc   NodePort    10.x.x.x         80:30080/TCP   1m
-# backend-svc    ClusterIP   10.x.x.x         8000/TCP       1m
-# postgresql     ClusterIP   10.x.x.x         5432/TCP       1m
-
-# Check pod logs (if needed)
-kubectl logs -f deployment/frontend -n todo-chatbot
-kubectl logs -f deployment/backend -n todo-chatbot
+kubectl port-forward svc/frontend-svc 3000:80 -n todo-chatbot
 ```
 
-## Cleanup
+Then open: `http://localhost:3000`
 
-Remove the deployment when done:
+---
+
+## Useful Commands
+
+### View Logs
 
 ```bash
-# Uninstall Helm release
+# Frontend logs
+kubectl logs -f deployment/frontend -n todo-chatbot
+
+# Backend logs
+kubectl logs -f deployment/backend -n todo-chatbot
+
+# PostgreSQL logs
+kubectl logs -f deployment/postgresql -n todo-chatbot
+```
+
+### Check Pod Details
+
+```bash
+kubectl describe pod <pod-name> -n todo-chatbot
+```
+
+### Check Events
+
+```bash
+kubectl get events -n todo-chatbot --sort-by='.lastTimestamp'
+```
+
+### Restart a Deployment
+
+```bash
+kubectl rollout restart deployment/frontend -n todo-chatbot
+kubectl rollout restart deployment/backend -n todo-chatbot
+```
+
+---
+
+## Cleanup Commands
+
+### Remove Helm Deployment
+
+```bash
 helm uninstall todo-chatbot
+```
 
-# Delete namespace (optional)
+### Delete Namespace
+
+```bash
 kubectl delete namespace todo-chatbot
+```
 
-# Stop Minikube
+### Stop Minikube
+
+```bash
 minikube stop
+```
 
-# Delete Minikube cluster (optional)
+### Delete Minikube Cluster (full reset)
+
+```bash
 minikube delete
 ```
+
+---
+
+## Deploy with Custom Configuration
+
+### Using --set flags
+
+```bash
+helm install todo-chatbot ./charts/todo-chatbot \
+  --set backend.openaiApiKey=sk-your-key
+```
+
+### Using a custom values file
+
+```bash
+helm install todo-chatbot ./charts/todo-chatbot -f custom-values.yaml
+```
+
+### Modify default values
+
+Edit `charts/todo-chatbot/values.yaml` to customize:
+- Replica counts
+- Resource limits
+- Service ports
+- Environment variables
+
+---
 
 ## Project Structure
 
@@ -175,10 +299,18 @@ phase4/
 ├── docker-compose.yml        # Local development compose file
 ├── frontend/
 │   ├── Dockerfile            # Frontend container definition
-│   └── .dockerignore         # Docker build exclusions
+│   ├── .dockerignore         # Docker build exclusions
+│   ├── package.json          # Node.js dependencies
+│   ├── next.config.js        # Next.js configuration
+│   ├── tsconfig.json         # TypeScript configuration
+│   ├── tailwind.config.ts    # Tailwind CSS configuration
+│   └── src/                  # Frontend source code
 ├── backend/
 │   ├── Dockerfile            # Backend container definition
-│   └── .dockerignore         # Docker build exclusions
+│   ├── requirements.txt      # Python dependencies
+│   ├── pyproject.toml        # Python project configuration
+│   ├── src/                  # Backend source code
+│   └── tests/                # Backend tests
 ├── charts/
 │   └── todo-chatbot/         # Helm chart
 │       ├── Chart.yaml        # Chart metadata
@@ -227,25 +359,36 @@ phase4/
 | `POSTGRES_PASSWORD` | Database password | `todopass` |
 | `POSTGRES_DB` | Database name | `tododb` |
 
-## Customization
+## Architecture
 
-### Modify Helm Values
-
-Edit `charts/todo-chatbot/values.yaml` to customize:
-- Replica counts
-- Resource limits
-- Service ports
-- Environment variables
-
-### Deploy with Custom Values
-
-```bash
-# Using --set flags
-helm install todo-chatbot ./charts/todo-chatbot \
-  --set backend.openaiApiKey=sk-your-key
-
-# Using a custom values file
-helm install todo-chatbot ./charts/todo-chatbot -f custom-values.yaml
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Minikube Cluster                      │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │                todo-chatbot namespace              │  │
+│  │                                                    │  │
+│  │  ┌──────────────┐      ┌──────────────┐           │  │
+│  │  │   Frontend   │      │   Backend    │           │  │
+│  │  │   (Next.js)  │ ───> │  (FastAPI)   │           │  │
+│  │  │   Port 3000  │      │   Port 8000  │           │  │
+│  │  └──────────────┘      └──────────────┘           │  │
+│  │         │                     │                    │  │
+│  │         │                     v                    │  │
+│  │         │              ┌──────────────┐           │  │
+│  │         │              │  PostgreSQL  │           │  │
+│  │         │              │   Port 5432  │           │  │
+│  │         │              └──────────────┘           │  │
+│  │         │                                          │  │
+│  │  ┌──────v──────┐                                  │  │
+│  │  │  NodePort   │                                  │  │
+│  │  │   :30080    │                                  │  │
+│  │  └─────────────┘                                  │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+         │
+         v
+    User Browser
+    http://localhost:30080
 ```
 
 ## Troubleshooting
@@ -253,62 +396,36 @@ helm install todo-chatbot ./charts/todo-chatbot -f custom-values.yaml
 ### Pods not starting
 
 ```bash
-# Check pod events
 kubectl describe pod <pod-name> -n todo-chatbot
-
-# Check for image pull errors (should be None for local images)
 kubectl get events -n todo-chatbot --sort-by='.lastTimestamp'
 ```
 
 ### Image not found
 
-Ensure you configured Docker to use Minikube's daemon before building:
+Make sure you configured Docker to use Minikube's daemon **before** building:
 
-```bash
-eval $(minikube docker-env)  # Run this first!
+```powershell
+minikube docker-env | Invoke-Expression   # run this FIRST
 docker build -t todo-frontend:latest ./frontend
+docker build -t todo-backend:latest ./backend
 ```
 
 ### Service not accessible
 
 ```bash
-# Get the correct URL
 minikube service frontend-svc -n todo-chatbot --url
-
 # Or use port forwarding
 kubectl port-forward svc/frontend-svc 3000:80 -n todo-chatbot
 ```
 
-## Architecture
+### Database connection issues
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Minikube Cluster                     │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │                todo-chatbot namespace              │  │
-│  │                                                    │  │
-│  │  ┌──────────────┐      ┌──────────────┐           │  │
-│  │  │   Frontend   │      │   Backend    │           │  │
-│  │  │   (Next.js)  │ ───▶ │  (FastAPI)   │           │  │
-│  │  │   Port 3000  │      │   Port 8000  │           │  │
-│  │  └──────────────┘      └──────────────┘           │  │
-│  │         │                     │                    │  │
-│  │         │                     ▼                    │  │
-│  │         │              ┌──────────────┐           │  │
-│  │         │              │  PostgreSQL  │           │  │
-│  │         │              │   Port 5432  │           │  │
-│  │         │              └──────────────┘           │  │
-│  │         │                                          │  │
-│  │  ┌──────▼──────┐                                  │  │
-│  │  │  NodePort   │                                  │  │
-│  │  │   :30080    │                                  │  │
-│  │  └─────────────┘                                  │  │
-│  └───────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-         │
-         ▼
-    User Browser
-    http://localhost:30080
+```bash
+# Check PostgreSQL pod
+kubectl logs deployment/postgresql -n todo-chatbot
+
+# Verify the secret exists
+kubectl get secret backend-secret -n todo-chatbot -o yaml
 ```
 
 ## License
